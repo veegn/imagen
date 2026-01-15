@@ -19,13 +19,7 @@
 		{
 			"binding": "DB",
 			"database_name": "imagen-db",
-			"database_id": "REPLACE_WITH_DB_ID"
-		},
-		{
-			"binding": "imagen_db",
-			"database_name": "imagen-db",
-			"database_id": "ae9a3d3e-cb4c-4ff7-96eb-1a7a8b6c091e",
-			"remote": true
+			"database_id": "ae9a3d3e-cb4c-4ff7-96eb-1a7a8b6c091e"
 		}
 	],
 	"observability": {
