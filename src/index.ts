@@ -51,4 +51,26 @@ app.get('/api/image/:key', async (c) => {
 	return new Response(object.body, { headers });
 });
 
+// Delete image from R2 and D1
+app.delete('/api/image/:id', async (c) => {
+	const id = c.req.param('id');
+
+	// 1. Get the R2 key from D1
+	const image = await c.env.DB.prepare(
+		'SELECT r2_key FROM images WHERE id = ?'
+	).bind(id).first<{ r2_key: string }>();
+
+	if (!image) return c.json({ error: 'Image not found' }, 404);
+
+	// 2. Delete from R2
+	await c.env.BUCKET.delete(image.r2_key);
+
+	// 3. Delete from D1
+	await c.env.DB.prepare(
+		'DELETE FROM images WHERE id = ?'
+	).bind(id).run();
+
+	return c.json({ success: true });
+});
+
 export default app;
