@@ -24,5 +24,8 @@
 		"check": "tsc && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev"
+	},
+	"dependencies": {
+		"hono": "^4.11.4"
 	}
 }

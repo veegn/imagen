@@ -2,10 +2,32 @@
 	"compatibility_date": "2025-10-08",
 	"main": "src/index.ts",
 	"name": "imagen",
+	"assets": {
+		"directory": "./public"
+	},
 	"upload_source_maps": true,
 	"ai": {
 		"binding": "AI"
 	},
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "imagen-buckets"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "imagen-db",
+			"database_id": "REPLACE_WITH_DB_ID"
+		},
+		{
+			"binding": "imagen_db",
+			"database_name": "imagen-db",
+			"database_id": "ae9a3d3e-cb4c-4ff7-96eb-1a7a8b6c091e",
+			"remote": true
+		}
+	],
 	"observability": {
 		"enabled": true
 	}

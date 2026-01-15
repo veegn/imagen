@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagen - AI Feed</title>
+    <style>
+        :root {
+            --bg: #020617;
+            --card-bg: rgba(30, 41, 59, 0.6);
+            --text: #f8fafc;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            position: relative;
+        }
+
+        header {
+            margin-bottom: 4rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 4rem;
+            background: linear-gradient(135deg, var(--accent), #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            letter-spacing: -0.05em;
+            filter: drop-shadow(0 0 20px var(--accent-glow));
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 1.125rem;
+            font-weight: 300;
+            margin-top: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin: 0 auto 5rem;
+            max-width: 700px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 0.5rem;
+            border-radius: 2rem;
+            border: 1px solid var(--glass);
+            box-shadow: 0 0 80px -20px rgba(56, 189, 248, 0.15);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 1rem 1.5rem;
+            font-size: 1.125rem;
+            outline: none;
+        }
+
+        button {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        button:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 30px -5px var(--accent-glow);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            filter: grayscale(1);
+            cursor: not-allowed;
+        }
+
+        .feed {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2.5rem;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            overflow: hidden;
+            border: 1px solid var(--glass);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            cursor: zoom-in;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:hover {
+            transform: translateY(-15px);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 40px 60px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        .card img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card:hover img {
+            transform: scale(1.15);
+        }
+
+        .card-content {
+            padding: 2rem 1.5rem 1.5rem;
+            background: linear-gradient(to top, rgba(2, 6, 23, 0.95), transparent);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .card:hover .card-content {
+            opacity: 1;
+        }
+
+        .prompt {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #f1f5f9;
+            font-weight: 300;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.4;
+                transform: scale(0.98);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0.4;
+                transform: scale(0.98);
+            }
+        }
+
+        /* Lightbox */
+        #lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #lightbox.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #lightbox img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 1rem;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 0.8);
+            transform: scale(0.9);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #lightbox.active img {
+            transform: scale(1);
+        }
+
+        #close-lightbox {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        #close-lightbox:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            header h1 {
+                font-size: 3rem;
+            }
+
+            .container {
+                padding: 3rem 1rem;
+            }
+
+            .feed {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+                background: none;
+                padding: 0.5rem;
+                border: none;
+                box-shadow: none;
+            }
+
+            input {
+                background: rgba(30, 41, 59, 0.5);
+                border-radius: 1rem;
+                margin-bottom: 0.5rem;
+                border: 1px solid var(--glass);
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="lightbox">
+        <span id="close-lightbox">&times;</span>
+        <img id="lightbox-img" src="" alt="Enlarged Visual">
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>✨ Imagen</h1>
+            <p>Ethereal Artistry Powered by AI</p>
+        </header>
+
+        <div class="input-group">
+            <input type="text" id="promptInput" placeholder="Shape reality with a prompt...">
+            <button id="generateBtn">Create</button>
+        </div>
+        <div id="loading">✨ Weaving Parallel Realities...</div>
+
+        <div class="feed" id="imageFeed"></div>
+    </div>
+
+    <script>
+        // Enhanced Vivid Particle Background
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const mouse = { x: null, y: null, radius: 180 };
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 40) + 1;
+                this.color = `hsla(${190 + Math.random() * 40}, 80%, 70%, ${0.2 + Math.random() * 0.4})`;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            update() {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                let forceDirectionX = dx / distance;
+                let forceDirectionY = dy / distance;
+                let maxDistance = mouse.radius;
+                let force = (maxDistance - distance) / maxDistance;
+                let directionX = forceDirectionX * force * this.density;
+                let directionY = forceDirectionY * force * this.density;
+
+                if (distance < mouse.radius) {
+                    this.x -= directionX;
+                    this.y -= directionY;
+                } else {
+                    if (this.x !== this.baseX) {
+                        let dx = this.x - this.baseX;
+                        this.x -= dx / 15;
+                    }
+                    if (this.y !== this.baseY) {
+                        let dy = this.y - this.baseY;
+                        this.y -= dy / 15;
+                    }
+                }
+            }
+        }
+
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 8000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a; b < particles.length; b++) {
+                    let dx = particles[a].x - particles[b].x;
+                    let dy = particles[a].y - particles[b].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        opacityValue = 1 - (distance / 100);
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${opacityValue * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].draw();
+                particles[i].update();
+            }
+            connect();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const closeLightbox = document.getElementById('close-lightbox');
+
+        function openLightbox(url) {
+            lightboxImg.src = url;
+            lightbox.style.display = 'flex';
+            setTimeout(() => lightbox.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightboxFn() {
+            lightbox.classList.remove('active');
+            setTimeout(() => {
+                lightbox.style.display = 'none';
+                lightboxImg.src = '';
+            }, 400);
+            document.body.style.overflow = 'auto';
+        }
+
+        lightbox.onclick = (e) => { if (e.target !== lightboxImg) closeLightboxFn(); };
+        window.onkeydown = (e) => { if (e.key === 'Escape') closeLightboxFn(); };
+
+        // API Interaction Logic
+        const feed = document.getElementById('imageFeed');
+        const btn = document.getElementById('generateBtn');
+        const input = document.getElementById('promptInput');
+        const loading = document.getElementById('loading');
+
+        async function loadImages() {
+            const res = await fetch('/api/images');
+            const data = await res.json();
+            feed.innerHTML = data.map(img => `
+                <div class="card" onclick="openLightbox('/api/image/${img.r2_key}')">
+                    <img src="/api/image/${img.r2_key}" loading="lazy">
+                    <div class="card-content">
+                        <div class="prompt" title="${img.prompt}">${img.prompt}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        btn.onclick = async () => {
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            btn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                if (res.ok) {
+                    input.value = '';
+                    await loadImages();
+                }
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            }
+        };
+
+        // Allow 'Enter' key to trigger generation
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btn.click();
+        });
+
+        loadImages();
+    </script>
+</body>
+
+</html>

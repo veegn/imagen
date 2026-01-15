@@ -1,36 +1,70 @@
-# Text To Image App
+# ✨ Imagen - Modern AI Image Feed
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/text-to-image-template)
+Imagen is a high-performance, aesthetically pleasing image generation service built on **Cloudflare Workers**. It leverages Cloudflare's AI, R2, and D1 services to provide a seamless "information flow" style experience for generating and exploring AI-driven visuals.
 
-![Text To Image Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/dddfe97e-e689-450b-d5a9-d49801da6a00/public)
+![Imagen Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/42670a6d-609c-418a-4619-6287b3faa100/public)
 
-<!-- dash-content-start -->
+## 🚀 Features
 
-Generate images based on text prompts using [Workers AI](https://developers.cloudflare.com/workers-ai/). In this example, going to the website will generate an image from the prompt "cyberpunk cat" using the `@cf/stabilityai/stable-diffusion-xl-base-1.0` model. Be patient! Your image may take a few seconds to generate.
+- **Modern UI/UX**: A sleek, responsive frontend with glassmorphism effects and smooth transitions.
+- **Interactive Background**: A high-performance canvas-based particle constellation background that reacts to mouse movement.
+- **AI Generation**: Powered by `@cf/stabilityai/stable-diffusion-xl-base-1.0` for high-quality image synthesis.
+- **Persistent Storage**:
+  - **Cloudflare R2**: Optimized object storage for generated image blobs.
+  - **Cloudflare D1**: SQL database for prompt metadata and image tracking.
+- **Image Lightbox**: Click any image in the feed to view a high-resolution version in a focused modal.
+- **Hono Backend**: A clean, modern API structure for efficient request handling.
 
-<!-- dash-content-end -->
+## 🛠️ Tech Stack
 
-## Getting Started
+- **Runtime**: [Cloudflare Workers](https://workers.cloudflare.com/)
+- **Framework**: [Hono](https://hono.dev/)
+- **AI Model**: Stability AI (SDXL)
+- **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/)
+- **Storage**: [Cloudflare R2](https://developers.cloudflare.com/r2/)
+- **Frontend**: Vanilla HTML5, CSS3, and JavaScript (Canvas API)
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+## 📦 Getting Started
 
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/text-to-image-template
-```
+### Prerequisites
+- [Node.js](https://nodejs.org/) installed.
+- A Cloudflare account with Workers and AI enabled.
+- [Wrangler](https://developers.cloudflare.com/workers/wrangler/install-setup/) CLI installed.
 
-A live public deployment of this template is available at [https://text-to-image-template.templates.workers.dev](https://text-to-image-template.templates.workers.dev)
+### Setup Instructions
 
-## Setup Steps
-
-1. Install the project dependencies with a package manager of your choice:
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
-2. Deploy the project!
+
+2. **Create D1 Database**:
    ```bash
-   npx wrangler deploy
+   npx wrangler d1 create imagen-db
    ```
-3. Monitor your worker
+
+3. **Initialize Database Schema**:
    ```bash
-   npx wrangler tail
+   npx wrangler d1 execute imagen-db --remote --file=./schema.sql
    ```
+
+4. **Create R2 Bucket**:
+   ```bash
+   npx wrangler r2 bucket create imagen-buckets
+   ```
+
+5. **Update Configuration**:
+   Copy the `database_id` from step 2 and update it in `wrangler.json`.
+
+6. **Run Locally**:
+   ```bash
+   npm run dev
+   ```
+
+7. **Deploy**:
+   ```bash
+   npm run deploy
+   ```
+
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
